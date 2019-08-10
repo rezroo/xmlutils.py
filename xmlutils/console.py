@@ -6,11 +6,12 @@
     Documentation:  http://nadh.in/code/xmlutils.py
 """
 
-import argparse
+import argparse, os, errno
 from xmlutils.xml2sql import xml2sql
 from xmlutils.xml2csv import xml2csv
 from xmlutils.xml2json import xml2json
 from xmlutils.xmltable2csv import xmltable2csv
+from xmlutils.xccdf2json import xccdf2json
 
 
 def run_xml2sql():
@@ -118,3 +119,50 @@ def run_xml2json():
     num = converter.convert(pretty=args.pretty)
 
     print("Wrote to", args.output_file)
+
+def mkdir_p(path):
+    try:
+        os.makedirs(path)
+    except OSError as exc:  # Python >2.5
+        if exc.errno == errno.EEXIST and os.path.isdir(path):
+            pass
+        else:
+            raise
+
+
+def run_xccdf2json():
+
+    # parse arguments
+    parser = argparse.ArgumentParser(description='Convert an xccdf xml file to json.')
+    parser.add_argument('--input', type=file, dest='input_file', required=True, help='input xml filename')
+    parser.add_argument('--output', dest='output_file', required=False, default=None, help='output json filename')
+    parser.add_argument('--subdirectory', dest='output_dir', required=False, default=None, help='output json to subdirectory')
+    parser.add_argument('--pretty', dest='pretty', required=False, default=False, action='store_true', \
+                        help='pretty print? (default=False)')
+    parser.add_argument('--encoding', dest='encoding', default='utf-8', help='character encoding (default=utf-8)')
+
+    args = parser.parse_args()
+
+    dirname = os.path.dirname(args.input_file.name)
+    if args.output_file == None:
+       basename = os.path.basename(args.input_file.name)
+       root, ext = os.path.splitext(basename)
+       basename = root + ".json"
+    else:
+       basename = args.output_file
+
+    if args.output_dir == None:
+        basename = dirname + '/' + basename
+    else:
+        dirname = dirname + '/' + args.output_dir
+        mkdir_p(dirname)
+        basename = dirname + '/' + basename
+
+    converter = xccdf2json(args.input_file, basename, args.encoding)
+    num = converter.convert(pretty=args.pretty)
+
+    print("Wrote to", basename)
+
+
+if __name__ == "__main__":
+    run_xccdf2json()
