@@ -20,18 +20,18 @@ class Tags:
     W3DOM = "http://www.w3.org/1999/xhtml"
     XMLNS = "http://checklists.nist.gov/xccdf/1.2"
     Domain = "{"+XMLNS+"}"
-    BenchmarkTag = Domain + "Benchmark"
-    TestResultTag = Domain + "TestResult"
-    RuleResultTag = Domain + "rule-result"
-    CheckTag = Domain + "check"
-    CheckImportTag = Domain + "check-import"
-    ResultTag = Domain + "result"
-    ScoreTag = Domain + "score"
-    IdentTag = Domain + "ident"
+    Benchmark = Domain + "Benchmark"
+    TestResult = Domain + "TestResult"
+    RuleResult = Domain + "rule-result"
+    Check = Domain + "check"
+    CheckImport = Domain + "check-import"
+    Result = Domain + "result"
+    Score = Domain + "score"
+    Ident = Domain + "ident"
 
-    ProfileTag = Domain + "Profile"
-    GroupTag = Domain + "Group"
-    RuleTag = Domain + "Rule"
+    Profile = Domain + "Profile"
+    Group = Domain + "Group"
+    Rule = Domain + "Rule"
 
 
 class xccdf2json:
@@ -65,26 +65,26 @@ class xccdf2json:
           while True:
             event, root = iterator.next()
             if event == Tags.SE:
-              if root.tag == Tags.BenchmarkTag:
+              if root.tag == Tags.Benchmark:
                     assert root.nsmap[None] == Tags.XMLNS
-              elif root.tag == Tags.TestResultTag:
+              elif root.tag == Tags.TestResult:
                     benchmark = self._convert2dict(root.attrib)
                     benchmark.pop("id")
                     benchmark["hostname"] = root.find(Tags.Domain + 'target').text
                     benchmark["user"] = root.find(Tags.Domain + 'identity').text
                     benchmark["profile"] = root.find(Tags.Domain + 'profile').attrib["idref"]
 #                   benchmark["score"] = root.find(Tags.Domain + 'score').text
-              elif root.tag == Tags.ProfileTag:
+              elif root.tag == Tags.Profile:
                     profile = []
                     the_id = root.attrib["id"] 
                     for ch in root:
                         if ch.tag == Tags.Domain + 'select':
                             profile.append( self._convert2dict(ch.attrib) )
                     profiles[the_id] = profile
-              elif root.tag == Tags.RuleTag:
+              elif root.tag == Tags.Rule:
                     while True:
                         event, child = iterator.next()
-                        if (event == Tags.EE and child.tag == Tags.RuleTag):
+                        if (event == Tags.EE and child.tag == Tags.Rule):
                             break;
                     rule = {}
                     rule["id"] = root.attrib["id"]
@@ -94,21 +94,21 @@ class xccdf2json:
                     rule["recommendation"] = ''.join( root.find(Tags.Domain + 'description').itertext() )
                     rule["justification"] = ''.join( root.find(Tags.Domain + 'rationale').itertext() )
                     rules.append(rule)
-              elif root.tag == Tags.ScoreTag:
+              elif root.tag == Tags.Score:
                     benchmark["score"] = root.text
-              elif root.tag == Tags.RuleResultTag:
+              elif root.tag == Tags.RuleResult:
                     #No need to remember because we end on the same element
                     #elem = root # remember the root of the result
                     ruleresult = self._convert2dict(root.attrib)
                     ruleresult.pop("time")
                     while True:
                         event, root = iterator.next()
-                        if (event == Tags.EE and root.tag == Tags.RuleResultTag):
+                        if (event == Tags.EE and root.tag == Tags.RuleResult):
                             break;
                         if event == Tags.SE:
-                            if root.tag == Tags.ResultTag:
+                            if root.tag == Tags.Result:
                                 ruleresult["result"] = root.text
-                            elif root.tag == Tags.IdentTag:
+                            elif root.tag == Tags.Ident:
                                 ruleresult["ident"] = root.text
                     ruleresults.append(ruleresult)
         except StopIteration:
